@@ -15,7 +15,7 @@ view their history, and get fitness tips.
 | 1  | Alif | 202407010086 | Main.java + WorkoutGUI.java (Leader) | Implementation          |
 | 2  |      |              | User.java                            | Introduction            |
 | 3  |      |              | Exercise.java                        | System Description      |
-| 4  |      |              | WorkoutPlan.java                     | Program Design          |
+| 4  | Affy | 202604010009 | WorkoutPlan.java                     | Program Design          |
 | 5  |      |              | WorkoutLog.java + 15 Test Cases      | Testing & Results       |
 | 6  |      |              | CalorieCalculator.java               | Discussion + Conclusion |
 | 7  |      |              | InputValidator.java + Poster         | Appendix                |
