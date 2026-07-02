@@ -10,15 +10,15 @@ view their history, and get fitness tips.
 
 ## Group Members & Task Assignment
 
-| No | Name    | Student ID   | Code Task                           | Report Section          |
-|----|---------|--------------|-------------------------------------|-------------------------|
-| 1  | Alif    | 202407010086 | Main.java + WorkoutGUI.java (Leader) | Implementation          |
-| 2  |         |              | User.java                           | Introduction            |
-| 3  |         |              | Exercise.java                       | System Description      |
-| 4  | Affy    | 202604010009 | WorkoutPlan.java + Poster           | Program Design          |
-| 5  | Ihab    | 202605010503 | WorkoutLog.java + 15 Test Cases     | Testing & Results       |
-| 6  | Shalini | 202409010170 | CalorieCalculator.java + flowchart  | Discussion + Conclusion |
-| 7  | Ali     | 202509010008 | InputValidator.java                 | Appendix                |
+| No | Name     | Student ID   | Code Task                           | Report Section          |
+|----|----------|--------------|-------------------------------------|-------------------------|
+| 1  | Alif     | 202407010086 | Main.java + WorkoutGUI.java (Leader) | Implementation          |
+| 2  |          |              | User.java                           | Introduction            |
+| 3  |          |              | Exercise.java                       | System Description      |
+| 4  | Affy     | 202604010009 | WorkoutPlan.java + Poster           | Program Design          |
+| 5  | Ihab     | 202605010503 | WorkoutLog.java + 15 Test Cases     | Testing & Results       |
+| 6  | Shalini  | 202409010170 | CalorieCalculator.java + flowchart  | Discussion + Conclusion |
+| 7  | Ali      | 202509010008 | InputValidator.java                 | Appendix                |
 
 ## Folder Structure
 ```
