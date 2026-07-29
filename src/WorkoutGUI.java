@@ -153,7 +153,7 @@ public class WorkoutGUI extends JFrame {
             String level  = (String) levelCombo.getSelectedItem();
             String goal   = (String) goalCombo.getSelectedItem();
 
-            if (name.isEmpty() || ageStr.isEmpty() || wtStr.isEmpty() || htStr.isEmpty()) {
+            if (!InputValidator.isValidName(name) || ageStr.isEmpty() || wtStr.isEmpty() || htStr.isEmpty()) {
                 feedbackLabel.setText("⚠  All fields are required.");
                 feedbackLabel.setForeground(DANGER);
                 return;
@@ -164,9 +164,9 @@ public class WorkoutGUI extends JFrame {
                 double weight = Double.parseDouble(wtStr);
                 double height = Double.parseDouble(htStr);
 
-                if (age <= 0 || age > 120) throw new IllegalArgumentException("Age must be 1–120.");
-                if (weight <= 0)           throw new IllegalArgumentException("Weight must be positive.");
-                if (height <= 0)           throw new IllegalArgumentException("Height must be positive.");
+                if (!InputValidator.isValidAge(age))       throw new IllegalArgumentException("Age must be 1–120.");
+                if (!InputValidator.isValidWeight(weight)) throw new IllegalArgumentException("Weight must be positive.");
+                if (!InputValidator.isValidHeight(height)) throw new IllegalArgumentException("Height must be positive.");
 
                 currentUser = new User(name, age, weight, height, gender, goal, level);
 
@@ -246,7 +246,7 @@ public class WorkoutGUI extends JFrame {
             String repsStr = repsField.getText().trim();
             String durStr  = durationField.getText().trim();
 
-            if (exName.isEmpty() || setsStr.isEmpty() || repsStr.isEmpty() || durStr.isEmpty()) {
+            if (!InputValidator.isValidName(exName) || setsStr.isEmpty() || repsStr.isEmpty() || durStr.isEmpty()) {
                 errLabel.setText("⚠ All fields required.");
                 return;
             }
@@ -256,9 +256,9 @@ public class WorkoutGUI extends JFrame {
                 int reps     = Integer.parseInt(repsStr);
                 int duration = Integer.parseInt(durStr);
 
-                if (sets <= 0)     throw new IllegalArgumentException("Sets must be ≥ 1");
-                if (reps <= 0)     throw new IllegalArgumentException("Reps must be ≥ 1");
-                if (duration <= 0) throw new IllegalArgumentException("Duration must be ≥ 1 min");
+                if (!InputValidator.isValidSets(sets))         throw new IllegalArgumentException("Sets must be ≥ 1");
+                if (!InputValidator.isValidReps(reps))         throw new IllegalArgumentException("Reps must be ≥ 1");
+                if (!InputValidator.isValidDuration(duration)) throw new IllegalArgumentException("Duration must be ≥ 1 min");
 
                 Exercise ex = new Exercise(exName, muscle, sets, reps, duration);
                 workoutPlan.addExercise(ex);
