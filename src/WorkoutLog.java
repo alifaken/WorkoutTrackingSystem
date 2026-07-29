@@ -3,40 +3,101 @@ import java.util.ArrayList;
 /**
  * WorkoutLog.java — Member 5
  *
- * Records completed workout sessions (history).
- * This class is also the basis for your 15 test cases — test every method
- * thoroughly once it's implemented.
+ * Records completed workout sessions and powers two smart features:
+ * Recovery Intelligence, and Consistency Score + Smart Motivation.
  * DO NOT add Scanner or System.out here.
- *
- * TODO (Member 5):
- *   1. Add a private ArrayList<String> or ArrayList<SessionRecord> field for history
- *      (Simplest option: store each session as a formatted String —
- *       e.g. "30/06/2026 | 3 exercises | 45 min | 220 kcal")
- *   2. Add a constructor that initializes the list
- *   3. Add logSession(String date, int exerciseCount, int duration, int calories)
- *   4. Add getHistory() — returns the full list of past sessions
- *   5. Add clearHistory()
  */
 public class WorkoutLog {
 
-    private ArrayList<String> history;
+    // One completed session, stored as structured data (not a pre-formatted
+    // string) so muscle groups can actually be compared for Recovery Intelligence.
+    private static class SessionRecord {
+        String date;
+        int exerciseCount;
+        int duration;
+        int calories;
+        ArrayList<String> muscleGroups;
+
+        SessionRecord(String date, int exerciseCount, int duration, int calories, ArrayList<String> muscleGroups) {
+            this.date = date;
+            this.exerciseCount = exerciseCount;
+            this.duration = duration;
+            this.calories = calories;
+            this.muscleGroups = muscleGroups;
+        }
+    }
+
+    private ArrayList<SessionRecord> sessions;
 
     public WorkoutLog() {
-        history = new ArrayList<>();
+        sessions = new ArrayList<>();
     }
 
-    public void logSession(String date, int exerciseCount, int duration, int calories) {
-        String entry = date + " | Exercises: " + exerciseCount
-                + " | Duration: " + duration + " min"
-                + " | Calories: " + calories + " kcal";
-        history.add(entry);
+    // Logs a completed session. A session can cover more than one muscle
+    // group (e.g. chest + legs in the same sitting), so this takes a list.
+    public void logSession(String date, int exerciseCount, int duration, int calories, ArrayList<String> muscleGroups) {
+        if (muscleGroups == null) {
+            muscleGroups = new ArrayList<>();
+        }
+        sessions.add(new SessionRecord(date, exerciseCount, duration, calories, muscleGroups));
     }
 
+    // Returns display-ready strings for the History table.
     public ArrayList<String> getHistory() {
-        return history;
+        ArrayList<String> formatted = new ArrayList<>();
+        for (SessionRecord s : sessions) {
+            formatted.add(s.date + " | Exercises: " + s.exerciseCount
+                    + " | Duration: " + s.duration + " min"
+                    + " | Calories: " + s.calories + " kcal");
+        }
+        return formatted;
     }
 
     public void clearHistory() {
-        history.clear();
+        sessions.clear();
+    }
+
+    // ---------- Recovery Intelligence ----------
+    // Compares today's muscle groups against the most recently logged
+    // session. Returns null when there's nothing to warn about.
+    public String getRecoveryWarning(ArrayList<String> todayMuscleGroups) {
+        if (sessions.isEmpty() || todayMuscleGroups == null) {
+            return null;
+        }
+        SessionRecord lastSession = sessions.get(sessions.size() - 1);
+        for (String group : todayMuscleGroups) {
+            if (lastSession.muscleGroups.contains(group)) {
+                return "You trained " + group + " last session too. Consider a rest day for "
+                        + group + " before training it again.";
+            }
+        }
+        return null;
+    }
+
+    // ---------- Consistency Score ----------
+    // plannedSessions is supplied by the caller (e.g. days available from
+    // the user's plan) so this class stays simple and independently testable.
+    public int getConsistencyScore(int plannedSessions) {
+        if (plannedSessions <= 0) {
+            return 0;
+        }
+        int score = (int) Math.round((sessions.size() * 100.0) / plannedSessions);
+        return Math.min(score, 100);
+    }
+
+    // ---------- Smart Motivation ----------
+    // Generates a message based on the consistency score band.
+    public String getMotivationMessage(int plannedSessions) {
+        if (sessions.isEmpty()) {
+            return "You haven't logged a session yet. Let's get started!";
+        }
+        int score = getConsistencyScore(plannedSessions);
+        if (score >= 90) {
+            return "Excellent! You're right on track with your weekly goal. Keep it up!";
+        } else if (score >= 60) {
+            return "Good progress — you're mostly keeping up with your plan.";
+        } else {
+            return "You've missed a few sessions recently. Small steps are better than stopping completely.";
+        }
     }
 }

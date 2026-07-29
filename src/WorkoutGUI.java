@@ -21,12 +21,14 @@ public class WorkoutGUI extends JFrame {
     private JTextArea tipsArea;
     private JPanel checklistPanel;
     private ArrayList<JCheckBox> sessionCheckboxes = new ArrayList<>();
+    private ArrayList<Exercise> checklistExercises = new ArrayList<>();
 
     private JLabel statusBar;
 
     public WorkoutGUI() {
         initializeFrame();
         workoutPlan = new WorkoutPlan();
+        workoutLog = new WorkoutLog();
         buildUI();
     }
 
@@ -331,14 +333,38 @@ public class WorkoutGUI extends JFrame {
         });
 
         logBtn.addActionListener(e -> {
-            long count = sessionCheckboxes.stream().filter(JCheckBox::isSelected).count();
+            ArrayList<String> completedMuscleGroups = new ArrayList<>();
+            int totalDuration = 0;
+            int count = 0;
+
+            for (int i = 0; i < sessionCheckboxes.size(); i++) {
+                if (sessionCheckboxes.get(i).isSelected()) {
+                    Exercise ex = checklistExercises.get(i);
+                    count++;
+                    totalDuration += ex.getDuration();
+                    if (!completedMuscleGroups.contains(ex.getMuscleGroup())) {
+                        completedMuscleGroups.add(ex.getMuscleGroup());
+                    }
+                }
+            }
+
             if (count == 0) {
                 JOptionPane.showMessageDialog(this, "Please check at least one completed exercise.", "Nothing logged", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            // TODO: workoutLog.logSession(completedExercises, calories) (Member 5)
+
+            // Recovery Intelligence — check before this session gets added to history
+            String recoveryWarning = workoutLog.getRecoveryWarning(completedMuscleGroups);
+            if (recoveryWarning != null) {
+                JOptionPane.showMessageDialog(this, recoveryWarning, "Recovery Check", JOptionPane.WARNING_MESSAGE);
+            }
+
+            // TODO: Replace with CalorieCalculator.calculate(exercises) once Member 6 delivers (still placeholder rate)
+            int calories = count * 50;
+
             String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
-            historyTableModel.addRow(new Object[]{today, count + " exercises", "--", "--"});
+            workoutLog.logSession(today, count, totalDuration, calories, completedMuscleGroups);
+            historyTableModel.addRow(new Object[]{today, count + " exercises", totalDuration, calories});
             JOptionPane.showMessageDialog(this, "Session logged for " + today + "! Great work! 💪", "Session Saved", JOptionPane.INFORMATION_MESSAGE);
             sessionCheckboxes.forEach(cb -> cb.setSelected(false));
             updateStatus("Session logged on " + today);
@@ -351,6 +377,7 @@ public class WorkoutGUI extends JFrame {
     private void refreshChecklist() {
         checklistPanel.removeAll();
         sessionCheckboxes.clear();
+        checklistExercises.clear();
 
         if (workoutPlan.getExercises().isEmpty()) {
             JLabel emptyLabel = new JLabel("  No exercises in your plan yet — add some in the My Plan tab.");
@@ -362,6 +389,7 @@ public class WorkoutGUI extends JFrame {
                 cb.setFont(new Font("Arial", Font.PLAIN, 13));
                 cb.setBackground(Color.WHITE);
                 sessionCheckboxes.add(cb);
+                checklistExercises.add(ex);
                 checklistPanel.add(cb);
             }
         }
@@ -393,6 +421,7 @@ public class WorkoutGUI extends JFrame {
             int confirm = JOptionPane.showConfirmDialog(this, "Clear all workout history?", "Confirm", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 historyTableModel.setRowCount(0);
+                workoutLog.clearHistory();
                 updateStatus("History cleared.");
             }
         });
