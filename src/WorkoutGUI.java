@@ -36,6 +36,7 @@ public class WorkoutGUI extends JFrame {
     // ─── Table Models (so we can update them later) ─────────────────────────
     private DefaultTableModel planTableModel;
     private DefaultTableModel historyTableModel;
+    private JTextArea tipsArea;
 
     // ─── Status Bar ─────────────────────────────────────────────────────────
     private JLabel statusBar;
@@ -50,7 +51,7 @@ public class WorkoutGUI extends JFrame {
     // ════════════════════════════════════════════════════════════════════════
 
     private void initializeFrame() {
-        setTitle("Workout Planning & Tracking System");
+        setTitle("FitStart");
         setSize(900, 650);
         setMinimumSize(new Dimension(800, 550));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -75,6 +76,14 @@ public class WorkoutGUI extends JFrame {
         tabs.addTab("  📊 History  ",  buildHistoryTab());
         tabs.addTab("  💡 Tips     ",  buildTipsTab());
 
+        // Refresh tips whenever the user switches to that tab, so it reflects
+        // whatever profile is currently saved (or the fallback prompt if none yet)
+        tabs.addChangeListener(e -> {
+            if (tabs.getSelectedIndex() == 4) {
+                tipsArea.setText(getTipsText());
+            }
+        });
+
         add(tabs, BorderLayout.CENTER);
 
         // Status bar at bottom
@@ -94,11 +103,11 @@ public class WorkoutGUI extends JFrame {
         header.setBackground(PRIMARY);
         header.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
 
-        JLabel appTitle = new JLabel("🏋️  Workout Planning & Tracking System");
+        JLabel appTitle = new JLabel("🏋️  FitStart");
         appTitle.setFont(new Font("Arial", Font.BOLD, 18));
         appTitle.setForeground(Color.WHITE);
 
-        JLabel subtitle = new JLabel("SDG 3: Good Health and Well-Being");
+        JLabel subtitle = new JLabel("Your Intelligent Workout Companion");
         subtitle.setFont(new Font("Arial", Font.PLAIN, 11));
         subtitle.setForeground(new Color(200, 240, 210));
 
@@ -137,10 +146,26 @@ public class WorkoutGUI extends JFrame {
         JTextField weightField = addFormRow(panel, g, "Weight (kg):",     3, "e.g. 65");
         JTextField heightField = addFormRow(panel, g, "Height (cm):",     4, "e.g. 170");
 
-        // Fitness goal dropdown
+        // Gender dropdown — required by User's constructor (also drives BMR calculation)
         g.gridy = 5; g.gridx = 0;
+        panel.add(styledLabel("Gender:"), g);
+        JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Male", "Female"});
+        genderCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        g.gridx = 1;
+        panel.add(genderCombo, g);
+
+        // Experience level dropdown — required by User's constructor (also feeds Risk Detector)
+        g.gridy = 6; g.gridx = 0;
+        panel.add(styledLabel("Experience Level:"), g);
+        JComboBox<String> levelCombo = new JComboBox<>(new String[]{"Beginner", "Intermediate", "Advanced"});
+        levelCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        g.gridx = 1;
+        panel.add(levelCombo, g);
+
+        // Fitness goal dropdown — wording matches User.java's fitnessGoal values exactly
+        g.gridy = 7; g.gridx = 0;
         panel.add(styledLabel("Fitness Goal:"), g);
-        String[] goals = {"Lose Weight", "Build Muscle", "Maintain Fitness", "Improve Endurance"};
+        String[] goals = {"Weight Loss", "Muscle Gain", "General Fitness"};
         JComboBox<String> goalCombo = new JComboBox<>(goals);
         goalCombo.setFont(new Font("Arial", Font.PLAIN, 13));
         g.gridx = 1;
@@ -149,13 +174,13 @@ public class WorkoutGUI extends JFrame {
         // Feedback label
         JLabel feedbackLabel = new JLabel(" ");
         feedbackLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-        g.gridy = 6; g.gridx = 0; g.gridwidth = 2;
+        g.gridy = 8; g.gridx = 0; g.gridwidth = 2;
         g.anchor = GridBagConstraints.CENTER;
         panel.add(feedbackLabel, g);
 
         // Save button
         JButton saveBtn = styledButton("Save Profile", PRIMARY);
-        g.gridy = 7;
+        g.gridy = 9;
         panel.add(saveBtn, g);
 
         // ── Action: Save Profile ────────────────────────────────────────────
@@ -164,6 +189,8 @@ public class WorkoutGUI extends JFrame {
             String ageStr = ageField.getText().trim();
             String wtStr  = weightField.getText().trim();
             String htStr  = heightField.getText().trim();
+            String gender = (String) genderCombo.getSelectedItem();
+            String level  = (String) levelCombo.getSelectedItem();
             String goal   = (String) goalCombo.getSelectedItem();
 
             // TODO: Replace with InputValidator.validateName(name) etc (Member 7)
@@ -182,12 +209,19 @@ public class WorkoutGUI extends JFrame {
                 if (weight <= 0)           throw new IllegalArgumentException("Weight must be positive.");
                 if (height <= 0)           throw new IllegalArgumentException("Height must be positive.");
 
-                // TODO: Replace with new User(name, age, weight, height, goal) when Member 2 is done
-                // currentUser = new User(name, age, weight, height, goal);
+                currentUser = new User(name, age, weight, height, gender, goal, level);
 
-                feedbackLabel.setText("✅  Profile saved for " + name + "!");
+                String bmiText = String.format("%.1f", currentUser.getBMI());
+                feedbackLabel.setText("✅  Saved! BMI: " + bmiText + " (" + currentUser.getBMICategory() + ")");
                 feedbackLabel.setForeground(PRIMARY);
                 updateStatus("Profile saved — " + name + " | Goal: " + goal);
+
+                // Beginner Risk Detector — educational only, not medical advice
+                String riskMessage = currentUser.getRiskMessage();
+                if (riskMessage != null) {
+                    JOptionPane.showMessageDialog(this, riskMessage,
+                            "A Note on Your Profile", JOptionPane.INFORMATION_MESSAGE);
+                }
 
             } catch (NumberFormatException ex) {
                 feedbackLabel.setText("⚠  Age, weight and height must be numbers.");
@@ -230,8 +264,8 @@ public class WorkoutGUI extends JFrame {
 
         JTextField exNameField    = placeholderField("Exercise name", 12);
         JComboBox<String> muscleCombo = new JComboBox<>(new String[]{
-            "Chest", "Back", "Shoulders", "Biceps", "Triceps",
-            "Legs", "Core", "Cardio", "Full Body"
+                "Chest", "Back", "Shoulders", "Biceps", "Triceps",
+                "Legs", "Core", "Cardio", "Full Body"
         });
         JTextField setsField      = placeholderField("Sets", 4);
         JTextField repsField      = placeholderField("Reps", 4);
@@ -440,38 +474,49 @@ public class WorkoutGUI extends JFrame {
 
         panel.add(sectionTitle("Tips & Goals"), BorderLayout.NORTH);
 
-        JTextArea tipsArea = new JTextArea();
+        tipsArea = new JTextArea();
         tipsArea.setEditable(false);
         tipsArea.setFont(new Font("Arial", Font.PLAIN, 14));
         tipsArea.setLineWrap(true);
         tipsArea.setWrapStyleWord(true);
         tipsArea.setBackground(Color.WHITE);
         tipsArea.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        tipsArea.setText(
-            "🏋️  General Health & Fitness Tips\n" +
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
-            "💧 Hydration\n" +
-            "   Drink at least 8 glasses of water daily.\n" +
-            "   Increase intake on training days.\n\n" +
-            "🌡  Warm Up & Cool Down\n" +
-            "   Always warm up 5–10 minutes before exercise.\n" +
-            "   Cool down and stretch after every session.\n\n" +
-            "💤 Rest & Recovery\n" +
-            "   Rest at least 1 day between training the same muscle group.\n" +
-            "   Aim for 7–8 hours of sleep per night.\n\n" +
-            "🥗 Nutrition\n" +
-            "   Track your meals alongside your workouts.\n" +
-            "   Prioritise protein for muscle recovery.\n\n" +
-            "📈 Consistency\n" +
-            "   Consistency beats intensity. Show up every day.\n" +
-            "   Track your progress to stay motivated.\n\n" +
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-            "📌  Save your profile to see personalized goal tips."
-            // TODO: Dynamically show tips based on currentUser.getFitnessGoal() (Member 2)
-        );
+        tipsArea.setText(getTipsText());
 
         panel.add(new JScrollPane(tipsArea), BorderLayout.CENTER);
         return panel;
+    }
+
+    /** Builds the Tips text, adding goal-specific advice once a profile exists. */
+    private String getTipsText() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("🏋️  General Health & Fitness Tips\n");
+        sb.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+        sb.append("💧 Hydration\n   Drink at least 8 glasses of water daily.\n   Increase intake on training days.\n\n");
+        sb.append("🌡  Warm Up & Cool Down\n   Always warm up 5–10 minutes before exercise.\n   Cool down and stretch after every session.\n\n");
+        sb.append("💤 Rest & Recovery\n   Rest at least 1 day between training the same muscle group.\n   Aim for 7–8 hours of sleep per night.\n\n");
+        sb.append("🥗 Nutrition\n   Track your meals alongside your workouts.\n   Prioritise protein for muscle recovery.\n\n");
+        sb.append("📈 Consistency\n   Consistency beats intensity. Show up every day.\n   Track your progress to stay motivated.\n\n");
+        sb.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+        if (currentUser != null) {
+            String goal = currentUser.getFitnessGoal();
+            sb.append("🎯 Tips for your goal: ").append(goal).append("\n\n");
+            if (goal.equalsIgnoreCase("Weight Loss")) {
+                sb.append("   Combine cardio with resistance training to preserve muscle while losing fat.\n");
+                sb.append("   Aim for a moderate calorie deficit rather than an extreme one.\n");
+            } else if (goal.equalsIgnoreCase("Muscle Gain")) {
+                sb.append("   Prioritise progressive overload — gradually increase weight or reps over time.\n");
+                sb.append("   Make sure protein intake and recovery support muscle growth.\n");
+            } else {
+                sb.append("   Mix strength, cardio, and flexibility work for balanced fitness.\n");
+                sb.append("   Focus on consistency over intensity.\n");
+            }
+        } else {
+            sb.append("📌  Save your profile to see personalized goal tips.");
+        }
+
+        return sb.toString();
     }
 
     // ════════════════════════════════════════════════════════════════════════

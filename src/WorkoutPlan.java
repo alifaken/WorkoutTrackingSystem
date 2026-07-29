@@ -17,18 +17,36 @@ import java.util.ArrayList;
 public class WorkoutPlan {
 
     // TODO: Add your field here
-    // private ArrayList<Exercise> exercises;
+    private ArrayList<Exercise> exercises;
 
     // TODO: Add constructor here
-    // public WorkoutPlan() {
-    //     exercises = new ArrayList<>();
-    // }
+    public WorkoutPlan() {
+        exercises = new ArrayList<>();
+    }
 
     // TODO: Add addExercise(Exercise e)
+    public void addExercise(Exercise e) {
+        exercises.add(e);
+    }
 
     // TODO: Add removeExercise(int index)
+    public void removeExercise(int index) {
+        if (index >= 0 && index < exercises.size()) {
+            exercises.remove(index);
+        }
+    }
 
     // TODO: Add getExercises()
+    public ArrayList<Exercise> getExercises() {
+        return exercises;
+    }
 
     // TODO: Add getTotalDuration()
+    public int getTotalDuration() {
+        int total = 0;
+        for (Exercise e : exercises) {
+            total += e.getDuration();
+        }
+        return total;
+    }
 }
