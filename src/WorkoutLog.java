@@ -53,6 +53,16 @@ public class WorkoutLog {
         return formatted;
     }
 
+    // Returns each session as a row matching the History table's columns:
+    // {Date, Exercises Completed, Duration (min), Calories Burned}
+    public ArrayList<Object[]> getHistoryRows() {
+        ArrayList<Object[]> rows = new ArrayList<>();
+        for (SessionRecord s : sessions) {
+            rows.add(new Object[]{s.date, s.exerciseCount + " exercises", s.duration, s.calories});
+        }
+        return rows;
+    }
+
     public void clearHistory() {
         sessions.clear();
     }

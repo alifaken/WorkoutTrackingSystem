@@ -59,6 +59,8 @@ public class WorkoutGUI extends JFrame {
             int selected = tabs.getSelectedIndex();
             if (selected == 2) {
                 refreshChecklist();
+            } else if (selected == 3) {
+                refreshHistoryTable();
             } else if (selected == 4) {
                 tipsArea.setText(getTipsText());
             }
@@ -364,7 +366,7 @@ public class WorkoutGUI extends JFrame {
 
             String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
             workoutLog.logSession(today, count, totalDuration, calories, completedMuscleGroups);
-            historyTableModel.addRow(new Object[]{today, count + " exercises", totalDuration, calories});
+            refreshHistoryTable();
             JOptionPane.showMessageDialog(this, "Session logged for " + today + "! Great work! 💪", "Session Saved", JOptionPane.INFORMATION_MESSAGE);
             sessionCheckboxes.forEach(cb -> cb.setSelected(false));
             updateStatus("Session logged on " + today);
@@ -413,6 +415,7 @@ public class WorkoutGUI extends JFrame {
         table.setRowHeight(28);
         table.setFont(new Font("Arial", Font.PLAIN, 13));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        refreshHistoryTable();
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.setBackground(BG);
@@ -420,8 +423,8 @@ public class WorkoutGUI extends JFrame {
         clearBtn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this, "Clear all workout history?", "Confirm", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                historyTableModel.setRowCount(0);
                 workoutLog.clearHistory();
+                refreshHistoryTable();
                 updateStatus("History cleared.");
             }
         });
@@ -430,6 +433,16 @@ public class WorkoutGUI extends JFrame {
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
         return panel;
+    }
+
+    /** Rebuilds the History table from whatever is currently in workoutLog.
+     *  This is the ONLY place that writes to historyTableModel — the GUI
+     *  never touches the table directly anywhere else. */
+    private void refreshHistoryTable() {
+        historyTableModel.setRowCount(0);
+        for (Object[] row : workoutLog.getHistoryRows()) {
+            historyTableModel.addRow(row);
+        }
     }
 
     private JPanel buildTipsTab() {
