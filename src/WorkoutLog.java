@@ -19,17 +19,24 @@ import java.util.ArrayList;
  */
 public class WorkoutLog {
 
-    // TODO: Add your field here
-    // private ArrayList<String> history;
+    private ArrayList<String> history;
 
-    // TODO: Add constructor here
-    // public WorkoutLog() {
-    //     history = new ArrayList<>();
-    // }
+    public WorkoutLog() {
+        history = new ArrayList<>();
+    }
 
-    // TODO: Add logSession(...)
+    public void logSession(String date, int exerciseCount, int duration, int calories) {
+        String entry = date + " | Exercises: " + exerciseCount
+                + " | Duration: " + duration + " min"
+                + " | Calories: " + calories + " kcal";
+        history.add(entry);
+    }
 
-    // TODO: Add getHistory()
+    public ArrayList<String> getHistory() {
+        return history;
+    }
 
-    // TODO: Add clearHistory()
+    public void clearHistory() {
+        history.clear();
+    }
 }
