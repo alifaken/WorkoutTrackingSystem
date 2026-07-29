@@ -1,52 +1,85 @@
 import java.util.ArrayList;
 
-/**
- * WorkoutPlan.java — Member 4
- *
- * Holds a collection of Exercise objects that make up the user's workout plan.
- * DO NOT add Scanner or System.out here.
- *
- * TODO (Member 4):
- *   1. Add a private ArrayList<Exercise> field to store exercises
- *   2. Add a constructor that initializes the ArrayList
- *   3. Add addExercise(Exercise e)
- *   4. Add removeExercise(int index)
- *   5. Add getExercises() — returns the full ArrayList
- *   6. Add getTotalDuration() — sums up duration of all exercises
- */
 public class WorkoutPlan {
-
-    // TODO: Add your field here
     private ArrayList<Exercise> exercises;
 
-    // TODO: Add constructor here
     public WorkoutPlan() {
         exercises = new ArrayList<>();
     }
 
-    // TODO: Add addExercise(Exercise e)
     public void addExercise(Exercise e) {
         exercises.add(e);
     }
 
-    // TODO: Add removeExercise(int index)
     public void removeExercise(int index) {
         if (index >= 0 && index < exercises.size()) {
             exercises.remove(index);
         }
     }
 
-    // TODO: Add getExercises()
     public ArrayList<Exercise> getExercises() {
         return exercises;
     }
 
-    // TODO: Add getTotalDuration()
     public int getTotalDuration() {
         int total = 0;
         for (Exercise e : exercises) {
             total += e.getDuration();
         }
         return total;
+    }
+
+    // ---------- Adaptive Workout Recommendation ----------
+    // Suggests a weekly training split based on goal, experience level, and
+    // how many days the user has available. Training days are spread across
+    // the week rather than clustered, giving muscle groups recovery time.
+    // Beginners are capped at 4 training days regardless of availability,
+    // since new lifters generally need more recovery between sessions —
+    // extra days become explicit rest days instead of being silently ignored.
+    public ArrayList<String> generateRecommendation(String goal, String level, int daysAvailable) {
+        ArrayList<String> plan = new ArrayList<>();
+
+        int effectiveDays = daysAvailable;
+        if (level.equalsIgnoreCase("Beginner") && daysAvailable > 4) {
+            effectiveDays = 4;
+        }
+
+        String[] schedule = getDaySchedule(daysAvailable);
+        String[] splitBlocks = getSplitBlocks(goal);
+
+        for (int i = 0; i < schedule.length; i++) {
+            if (i < effectiveDays) {
+                plan.add(schedule[i] + ": " + splitBlocks[i % splitBlocks.length]);
+            } else {
+                plan.add(schedule[i] + ": Rest / Recovery (capped for beginners)");
+            }
+        }
+        return plan;
+    }
+
+    // Spreads training days across the week instead of clustering them.
+    private String[] getDaySchedule(int daysAvailable) {
+        switch (daysAvailable) {
+            case 1: return new String[]{"Monday"};
+            case 2: return new String[]{"Monday", "Thursday"};
+            case 3: return new String[]{"Monday", "Wednesday", "Friday"};
+            case 4: return new String[]{"Monday", "Tuesday", "Thursday", "Friday"};
+            case 5: return new String[]{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+            case 6: return new String[]{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+            default: return new String[]{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+        }
+    }
+
+    // Muscle group pairings per goal, cycled across however many training
+    // days are actually scheduled.
+    private String[] getSplitBlocks(String goal) {
+        switch (goal) {
+            case "Muscle Gain":
+                return new String[]{"Chest + Triceps", "Back + Biceps", "Legs + Shoulders", "Core + Full Body"};
+            case "Weight Loss":
+                return new String[]{"Cardio + Full Body", "Legs + Core", "Cardio + Upper Body", "Full Body"};
+            default: // General Fitness
+                return new String[]{"Full Body", "Cardio + Core", "Upper Body", "Lower Body"};
+        }
     }
 }

@@ -228,6 +228,7 @@ public class WorkoutGUI extends JFrame {
 
         JButton addBtn    = styledButton("+ Add", ACCENT);
         JButton removeBtn = styledButton("Remove", DANGER);
+        JButton recommendBtn = styledButton("Get Recommendation", PRIMARY);
         JLabel  errLabel  = new JLabel(" ");
         errLabel.setForeground(DANGER);
         errLabel.setFont(new Font("Arial", Font.ITALIC, 12));
@@ -239,6 +240,7 @@ public class WorkoutGUI extends JFrame {
         inputPanel.add(new JLabel("Duration:")); inputPanel.add(durationField);
         inputPanel.add(addBtn);
         inputPanel.add(removeBtn);
+        inputPanel.add(recommendBtn);
         inputPanel.add(errLabel);
 
         panel.add(inputPanel, BorderLayout.SOUTH);
@@ -289,6 +291,38 @@ public class WorkoutGUI extends JFrame {
                 updateStatus("Removed: " + name);
             } else {
                 errLabel.setText("⚠ Select a row to remove.");
+            }
+        });
+
+        recommendBtn.addActionListener(e -> {
+            if (currentUser == null) {
+                JOptionPane.showMessageDialog(this, "Please save your profile first — the recommendation uses your goal and experience level.",
+                        "Profile Needed", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String daysStr = JOptionPane.showInputDialog(this, "How many days a week can you train? (1-7)");
+            if (daysStr == null) return; // cancelled
+
+            try {
+                int days = Integer.parseInt(daysStr.trim());
+                if (!InputValidator.isValidDaysAvailable(days)) {
+                    JOptionPane.showMessageDialog(this, "Days available must be between 1 and 7.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                ArrayList<String> recommendation = workoutPlan.generateRecommendation(
+                        currentUser.getFitnessGoal(), currentUser.getLevel(), days);
+
+                StringBuilder sb = new StringBuilder("Recommended Weekly Split (" + currentUser.getFitnessGoal() + "):\n\n");
+                for (String line : recommendation) {
+                    sb.append(line).append("\n");
+                }
+                JOptionPane.showMessageDialog(this, sb.toString(), "Your Recommendation", JOptionPane.INFORMATION_MESSAGE);
+                updateStatus("Weekly recommendation generated for " + days + " day(s).");
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter a number.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
             }
         });
 
