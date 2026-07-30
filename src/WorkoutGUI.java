@@ -15,6 +15,11 @@ public class WorkoutGUI extends JFrame {
     private static final Color ACCENT     = new Color(52, 120, 190);
     private static final Color BG         = new Color(245, 247, 250);
     private static final Color TEXT_DARK  = new Color(30, 30, 30);
+    private static final Color TEXT_MUTED = new Color(110, 118, 129);
+    private static final Color BORDER     = new Color(220, 224, 230);
+
+    // Segoe UI renders far better than Arial on Windows and falls back safely elsewhere
+    private static final String FONT_FAMILY = "Segoe UI";
 
     private DefaultTableModel planTableModel;
     private DefaultTableModel historyTableModel;
@@ -48,14 +53,14 @@ public class WorkoutGUI extends JFrame {
         add(buildHeader(), BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(new Font("Arial", Font.PLAIN, 13));
+        tabs.setFont(new Font(FONT_FAMILY, Font.PLAIN, 14));
         tabs.setBackground(BG);
 
-        tabs.addTab("  👤 Profile  ",  buildProfileTab());
-        tabs.addTab("  📋 My Plan  ",  buildWorkoutPlanTab());
-        tabs.addTab("  ✅ Track    ",  buildTrackSessionTab());
-        tabs.addTab("  📊 History  ",  buildHistoryTab());
-        tabs.addTab("  💡 Tips     ",  buildTipsTab());
+        tabs.addTab("   Profile   ",  buildProfileTab());
+        tabs.addTab("   My Plan   ",  buildWorkoutPlanTab());
+        tabs.addTab("   Track   ",  buildTrackSessionTab());
+        tabs.addTab("   History   ",  buildHistoryTab());
+        tabs.addTab("   Tips   ",  buildTipsTab());
 
         tabs.addChangeListener(e -> {
             int selected = tabs.getSelectedIndex();
@@ -71,26 +76,28 @@ public class WorkoutGUI extends JFrame {
         add(tabs, BorderLayout.CENTER);
 
         statusBar = new JLabel("  Welcome! Please set up your profile first.");
-        statusBar.setFont(new Font("Arial", Font.ITALIC, 12));
-        statusBar.setForeground(Color.GRAY);
-        statusBar.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        statusBar.setFont(new Font(FONT_FAMILY, Font.PLAIN, 12));
+        statusBar.setForeground(TEXT_MUTED);
+        statusBar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER),
+                BorderFactory.createEmptyBorder(7, 12, 7, 12)));
         add(statusBar, BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(PRIMARY);
-        header.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        header.setBorder(BorderFactory.createEmptyBorder(18, 26, 18, 26));
 
-        JLabel appTitle = new JLabel("🏋️  FitStart");
-        appTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        JLabel appTitle = new JLabel("FitStart");
+        appTitle.setFont(new Font(FONT_FAMILY, Font.BOLD, 24));
         appTitle.setForeground(Color.WHITE);
 
         JLabel subtitle = new JLabel("Your Intelligent Workout Companion");
-        subtitle.setFont(new Font("Arial", Font.PLAIN, 11));
+        subtitle.setFont(new Font(FONT_FAMILY, Font.PLAIN, 12));
         subtitle.setForeground(new Color(200, 240, 210));
 
-        JPanel textPanel = new JPanel(new GridLayout(2, 1));
+        JPanel textPanel = new JPanel(new GridLayout(2, 1, 0, 3));
         textPanel.setOpaque(false);
         textPanel.add(appTitle);
         textPanel.add(subtitle);
@@ -121,14 +128,14 @@ public class WorkoutGUI extends JFrame {
         g.gridy = 5; g.gridx = 0;
         panel.add(styledLabel("Gender:"), g);
         JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Male", "Female"});
-        genderCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        genderCombo.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
         g.gridx = 1;
         panel.add(genderCombo, g);
 
         g.gridy = 6; g.gridx = 0;
         panel.add(styledLabel("Experience Level:"), g);
         JComboBox<String> levelCombo = new JComboBox<>(new String[]{"Beginner", "Intermediate", "Advanced"});
-        levelCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        levelCombo.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
         g.gridx = 1;
         panel.add(levelCombo, g);
 
@@ -136,12 +143,12 @@ public class WorkoutGUI extends JFrame {
         panel.add(styledLabel("Fitness Goal:"), g);
         String[] goals = {"Weight Loss", "Muscle Gain", "General Fitness"};
         JComboBox<String> goalCombo = new JComboBox<>(goals);
-        goalCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        goalCombo.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
         g.gridx = 1;
         panel.add(goalCombo, g);
 
         JLabel feedbackLabel = new JLabel(" ");
-        feedbackLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        feedbackLabel.setFont(new Font(FONT_FAMILY, Font.ITALIC, 12));
         g.gridy = 8; g.gridx = 0; g.gridwidth = 2;
         g.anchor = GridBagConstraints.CENTER;
         panel.add(feedbackLabel, g);
@@ -160,7 +167,7 @@ public class WorkoutGUI extends JFrame {
             String goal   = (String) goalCombo.getSelectedItem();
 
             if (!InputValidator.isValidName(name) || ageStr.isEmpty() || wtStr.isEmpty() || htStr.isEmpty()) {
-                feedbackLabel.setText("⚠  All fields are required.");
+                feedbackLabel.setText("All fields are required.");
                 feedbackLabel.setForeground(DANGER);
                 return;
             }
@@ -177,7 +184,7 @@ public class WorkoutGUI extends JFrame {
                 currentUser = new User(name, age, weight, height, gender, goal, level);
 
                 String bmiText = String.format("%.1f", currentUser.getBMI());
-                feedbackLabel.setText("✅  Saved! BMI: " + bmiText + " (" + currentUser.getBMICategory() + ")");
+                feedbackLabel.setText("Saved. BMI: " + bmiText + " (" + currentUser.getBMICategory() + ")");
                 feedbackLabel.setForeground(PRIMARY);
                 updateStatus("Profile saved — " + name + " | Goal: " + goal);
 
@@ -188,10 +195,10 @@ public class WorkoutGUI extends JFrame {
                 }
 
             } catch (NumberFormatException ex) {
-                feedbackLabel.setText("⚠  Age, weight and height must be numbers.");
+                feedbackLabel.setText("Age, weight and height must be numbers.");
                 feedbackLabel.setForeground(DANGER);
             } catch (IllegalArgumentException ex) {
-                feedbackLabel.setText("⚠  " + ex.getMessage());
+                feedbackLabel.setText(ex.getMessage());
                 feedbackLabel.setForeground(DANGER);
             }
         });
@@ -211,9 +218,7 @@ public class WorkoutGUI extends JFrame {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable table = new JTable(planTableModel);
-        table.setRowHeight(28);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        styleTable(table);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
@@ -233,7 +238,7 @@ public class WorkoutGUI extends JFrame {
         JButton recommendBtn = styledButton("Get Recommendation", PRIMARY);
         JLabel  errLabel  = new JLabel(" ");
         errLabel.setForeground(DANGER);
-        errLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        errLabel.setFont(new Font(FONT_FAMILY, Font.ITALIC, 12));
 
         inputPanel.add(new JLabel("Exercise:")); inputPanel.add(exNameField);
         inputPanel.add(new JLabel("Muscle:"));   inputPanel.add(muscleCombo);
@@ -255,7 +260,7 @@ public class WorkoutGUI extends JFrame {
             String durStr  = durationField.getText().trim();
 
             if (!InputValidator.isValidName(exName) || setsStr.isEmpty() || repsStr.isEmpty() || durStr.isEmpty()) {
-                errLabel.setText("⚠ All fields required.");
+                errLabel.setText("All fields required.");
                 return;
             }
 
@@ -264,9 +269,9 @@ public class WorkoutGUI extends JFrame {
                 int reps     = Integer.parseInt(repsStr);
                 int duration = Integer.parseInt(durStr);
 
-                if (!InputValidator.isValidSets(sets))         throw new IllegalArgumentException("Sets must be ≥ 1");
-                if (!InputValidator.isValidReps(reps))         throw new IllegalArgumentException("Reps must be ≥ 1");
-                if (!InputValidator.isValidDuration(duration)) throw new IllegalArgumentException("Duration must be ≥ 1 min");
+                if (!InputValidator.isValidSets(sets))         throw new IllegalArgumentException("Sets must be at least 1");
+                if (!InputValidator.isValidReps(reps))         throw new IllegalArgumentException("Reps must be at least 1");
+                if (!InputValidator.isValidDuration(duration)) throw new IllegalArgumentException("Duration must be at least 1 min");
 
                 Exercise ex = new Exercise(exName, muscle, sets, reps, duration);
                 workoutPlan.addExercise(ex);
@@ -278,9 +283,9 @@ public class WorkoutGUI extends JFrame {
                 updateStatus("Exercise added: " + exName);
 
             } catch (NumberFormatException ex) {
-                errLabel.setText("⚠ Sets, Reps, Duration must be numbers.");
+                errLabel.setText("Sets, Reps, Duration must be numbers.");
             } catch (IllegalArgumentException ex) {
-                errLabel.setText("⚠ " + ex.getMessage());
+                errLabel.setText(ex.getMessage());
             }
         });
 
@@ -292,7 +297,7 @@ public class WorkoutGUI extends JFrame {
                 planTableModel.removeRow(selectedRow);
                 updateStatus("Removed: " + name);
             } else {
-                errLabel.setText("⚠ Select a row to remove.");
+                errLabel.setText("Select a row to remove.");
             }
         });
 
@@ -351,11 +356,11 @@ public class WorkoutGUI extends JFrame {
         bottomPanel.setBackground(BG);
 
         JLabel calorieLabel = new JLabel("Estimated Calories Burned: -- kcal");
-        calorieLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        calorieLabel.setFont(new Font(FONT_FAMILY, Font.BOLD, 14));
         calorieLabel.setForeground(TEXT_DARK);
 
         JButton calcBtn = styledButton("Calculate Calories", ACCENT);
-        JButton logBtn  = styledButton("Log This Session ✅", PRIMARY);
+        JButton logBtn  = styledButton("Log This Session", PRIMARY);
 
         bottomPanel.add(calorieLabel);
         bottomPanel.add(calcBtn);
@@ -363,24 +368,28 @@ public class WorkoutGUI extends JFrame {
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         calcBtn.addActionListener(e -> {
-            // TODO: Replace with CalorieCalculator.calculate(exercises) (Member 6)
-            int dummyCalories = 0;
-            for (JCheckBox cb : sessionCheckboxes) {
-                if (cb.isSelected()) dummyCalories += 50; // placeholder rate until Member 6's class lands
+            int totalCalories = 0;
+            for (int i = 0; i < sessionCheckboxes.size(); i++) {
+                if (sessionCheckboxes.get(i).isSelected()) {
+                    Exercise ex = checklistExercises.get(i);
+                    totalCalories += CalorieCalculator.calculateCalories(ex.getMuscleGroup(), ex.getDuration());
+                }
             }
-            calorieLabel.setText("Estimated Calories Burned: " + dummyCalories + " kcal");
+            calorieLabel.setText("Estimated Calories Burned: " + totalCalories + " kcal");
         });
 
         logBtn.addActionListener(e -> {
             ArrayList<String> completedMuscleGroups = new ArrayList<>();
             int totalDuration = 0;
             int count = 0;
+            int calories = 0;
 
             for (int i = 0; i < sessionCheckboxes.size(); i++) {
                 if (sessionCheckboxes.get(i).isSelected()) {
                     Exercise ex = checklistExercises.get(i);
                     count++;
                     totalDuration += ex.getDuration();
+                    calories += CalorieCalculator.calculateCalories(ex.getMuscleGroup(), ex.getDuration());
                     if (!completedMuscleGroups.contains(ex.getMuscleGroup())) {
                         completedMuscleGroups.add(ex.getMuscleGroup());
                     }
@@ -398,13 +407,10 @@ public class WorkoutGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, recoveryWarning, "Recovery Check", JOptionPane.WARNING_MESSAGE);
             }
 
-            // TODO: Replace with CalorieCalculator.calculate(exercises) once Member 6 delivers (still placeholder rate)
-            int calories = count * 50;
-
             String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
             workoutLog.logSession(today, count, totalDuration, calories, completedMuscleGroups);
             refreshHistoryTable();
-            JOptionPane.showMessageDialog(this, "Session logged for " + today + "! Great work! 💪", "Session Saved", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Session logged for " + today + ". Great work!", "Session Saved", JOptionPane.INFORMATION_MESSAGE);
             sessionCheckboxes.forEach(cb -> cb.setSelected(false));
             updateStatus("Session logged on " + today);
         });
@@ -420,12 +426,12 @@ public class WorkoutGUI extends JFrame {
 
         if (workoutPlan.getExercises().isEmpty()) {
             JLabel emptyLabel = new JLabel("  No exercises in your plan yet — add some in the My Plan tab.");
-            emptyLabel.setFont(new Font("Arial", Font.ITALIC, 13));
+            emptyLabel.setFont(new Font(FONT_FAMILY, Font.ITALIC, 13));
             checklistPanel.add(emptyLabel);
         } else {
             for (Exercise ex : workoutPlan.getExercises()) {
                 JCheckBox cb = new JCheckBox("  " + ex.toString());
-                cb.setFont(new Font("Arial", Font.PLAIN, 13));
+                cb.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
                 cb.setBackground(Color.WHITE);
                 sessionCheckboxes.add(cb);
                 checklistExercises.add(ex);
@@ -449,15 +455,13 @@ public class WorkoutGUI extends JFrame {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable table = new JTable(historyTableModel);
-        table.setRowHeight(28);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        styleTable(table);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(BG);
 
         consistencyLabel = new JLabel(" ");
-        consistencyLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        consistencyLabel.setFont(new Font(FONT_FAMILY, Font.BOLD, 13));
         consistencyLabel.setForeground(TEXT_DARK);
         bottomPanel.add(consistencyLabel, BorderLayout.WEST);
 
@@ -512,7 +516,7 @@ public class WorkoutGUI extends JFrame {
 
         tipsArea = new JTextArea();
         tipsArea.setEditable(false);
-        tipsArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        tipsArea.setFont(new Font("Consolas", Font.PLAIN, 14));
         tipsArea.setLineWrap(true);
         tipsArea.setWrapStyleWord(true);
         tipsArea.setBackground(Color.WHITE);
@@ -525,18 +529,18 @@ public class WorkoutGUI extends JFrame {
 
     private String getTipsText() {
         StringBuilder sb = new StringBuilder();
-        sb.append("🏋️  General Health & Fitness Tips\n");
-        sb.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
-        sb.append("💧 Hydration\n   Drink at least 8 glasses of water daily.\n   Increase intake on training days.\n\n");
-        sb.append("🌡  Warm Up & Cool Down\n   Always warm up 5–10 minutes before exercise.\n   Cool down and stretch after every session.\n\n");
-        sb.append("💤 Rest & Recovery\n   Rest at least 1 day between training the same muscle group.\n   Aim for 7–8 hours of sleep per night.\n\n");
-        sb.append("🥗 Nutrition\n   Track your meals alongside your workouts.\n   Prioritise protein for muscle recovery.\n\n");
-        sb.append("📈 Consistency\n   Consistency beats intensity. Show up every day.\n   Track your progress to stay motivated.\n\n");
-        sb.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        sb.append("GENERAL HEALTH & FITNESS TIPS\n");
+        sb.append("====================================\n\n");
+        sb.append("HYDRATION\n   Drink at least 8 glasses of water daily.\n   Increase intake on training days.\n\n");
+        sb.append("WARM UP & COOL DOWN\n   Always warm up 5–10 minutes before exercise.\n   Cool down and stretch after every session.\n\n");
+        sb.append("REST & RECOVERY\n   Rest at least 1 day between training the same muscle group.\n   Aim for 7–8 hours of sleep per night.\n\n");
+        sb.append("NUTRITION\n   Track your meals alongside your workouts.\n   Prioritise protein for muscle recovery.\n\n");
+        sb.append("CONSISTENCY\n   Consistency beats intensity. Show up every day.\n   Track your progress to stay motivated.\n\n");
+        sb.append("====================================\n");
 
         if (currentUser != null) {
             String goal = currentUser.getFitnessGoal();
-            sb.append("🎯 Tips for your goal: ").append(goal).append("\n\n");
+            sb.append("TIPS FOR YOUR GOAL: ").append(goal).append("\n\n");
             if (goal.equalsIgnoreCase("Weight Loss")) {
                 sb.append("   Combine cardio with resistance training to preserve muscle while losing fat.\n");
                 sb.append("   Aim for a moderate calorie deficit rather than an extreme one.\n");
@@ -548,7 +552,7 @@ public class WorkoutGUI extends JFrame {
                 sb.append("   Focus on consistency over intensity.\n");
             }
         } else {
-            sb.append("📌  Save your profile to see personalized goal tips.");
+            sb.append("Save your profile to see personalized goal tips.");
         }
 
         return sb.toString();
@@ -556,15 +560,18 @@ public class WorkoutGUI extends JFrame {
 
     private JLabel sectionTitle(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", Font.BOLD, 18));
+        label.setFont(new Font(FONT_FAMILY, Font.BOLD, 19));
         label.setForeground(TEXT_DARK);
-        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        // Thin accent rule under each section heading, then padding below it
+        label.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 2, 0, PRIMARY),
+                BorderFactory.createEmptyBorder(0, 0, 0, 0)));
         return label;
     }
 
     private JLabel styledLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", Font.PLAIN, 13));
+        label.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
         return label;
     }
 
@@ -579,20 +586,38 @@ public class WorkoutGUI extends JFrame {
 
     private JTextField placeholderField(String hint, int cols) {
         JTextField field = new JTextField(cols);
-        field.setFont(new Font("Arial", Font.PLAIN, 13));
+        field.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
         field.setToolTipText(hint);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)));
         return field;
+    }
+
+    /** Shared table styling so both tables look consistent. */
+    private void styleTable(JTable table) {
+        table.setRowHeight(32);
+        table.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
+        table.setGridColor(BORDER);
+        table.setShowVerticalLines(false);
+        table.setSelectionBackground(new Color(226, 240, 232));
+        table.setSelectionForeground(TEXT_DARK);
+        table.getTableHeader().setFont(new Font(FONT_FAMILY, Font.BOLD, 13));
+        table.getTableHeader().setBackground(Color.WHITE);
+        table.getTableHeader().setForeground(TEXT_MUTED);
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, BORDER));
     }
 
     private JButton styledButton(String text, Color bg) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Arial", Font.BOLD, 13));
+        btn.setFont(new Font(FONT_FAMILY, Font.BOLD, 13));
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setBorderPainted(false);
         btn.setOpaque(true);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         return btn;
     }
 
