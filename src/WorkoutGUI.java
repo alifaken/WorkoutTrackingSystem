@@ -22,6 +22,8 @@ public class WorkoutGUI extends JFrame {
     private JPanel checklistPanel;
     private ArrayList<JCheckBox> sessionCheckboxes = new ArrayList<>();
     private ArrayList<Exercise> checklistExercises = new ArrayList<>();
+    private int plannedDaysPerWeek = 0; // set when the user requests a recommendation; feeds Consistency Score
+    private JLabel consistencyLabel;
 
     private JLabel statusBar;
 
@@ -313,6 +315,7 @@ public class WorkoutGUI extends JFrame {
 
                 ArrayList<String> recommendation = workoutPlan.generateRecommendation(
                         currentUser.getFitnessGoal(), currentUser.getLevel(), days);
+                plannedDaysPerWeek = days;
 
                 StringBuilder sb = new StringBuilder("Recommended Weekly Split (" + currentUser.getFitnessGoal() + "):\n\n");
                 for (String line : recommendation) {
@@ -451,8 +454,16 @@ public class WorkoutGUI extends JFrame {
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         refreshHistoryTable();
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(BG);
+
+        consistencyLabel = new JLabel(" ");
+        consistencyLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        consistencyLabel.setForeground(TEXT_DARK);
+        bottomPanel.add(consistencyLabel, BorderLayout.WEST);
+
+        JPanel clearBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        clearBtnPanel.setBackground(BG);
         JButton clearBtn = styledButton("Clear History", DANGER);
         clearBtn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this, "Clear all workout history?", "Confirm", JOptionPane.YES_NO_OPTION);
@@ -462,7 +473,8 @@ public class WorkoutGUI extends JFrame {
                 updateStatus("History cleared.");
             }
         });
-        bottomPanel.add(clearBtn);
+        clearBtnPanel.add(clearBtn);
+        bottomPanel.add(clearBtnPanel, BorderLayout.EAST);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
@@ -477,6 +489,18 @@ public class WorkoutGUI extends JFrame {
         for (Object[] row : workoutLog.getHistoryRows()) {
             historyTableModel.addRow(row);
         }
+        refreshConsistencyDisplay();
+    }
+
+    /** Shows Consistency Score + Smart Motivation, or a prompt if no target is set yet. */
+    private void refreshConsistencyDisplay() {
+        if (plannedDaysPerWeek <= 0) {
+            consistencyLabel.setText("Get a recommendation in My Plan to see your consistency score.");
+            return;
+        }
+        int score = workoutLog.getConsistencyScore(plannedDaysPerWeek);
+        String motivation = workoutLog.getMotivationMessage(plannedDaysPerWeek);
+        consistencyLabel.setText("Consistency: " + score + "% — " + motivation);
     }
 
     private JPanel buildTipsTab() {
