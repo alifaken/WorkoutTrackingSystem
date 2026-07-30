@@ -452,7 +452,6 @@ public class WorkoutGUI extends JFrame {
         table.setRowHeight(28);
         table.setFont(new Font("Arial", Font.PLAIN, 13));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
-        refreshHistoryTable();
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(BG);
@@ -478,6 +477,7 @@ public class WorkoutGUI extends JFrame {
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
+        refreshHistoryTable();
         return panel;
     }
 
