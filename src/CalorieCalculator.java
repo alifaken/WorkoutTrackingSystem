@@ -1,27 +1,74 @@
 /**
- * CalorieCalculator.java — Member 6
- *
- * Calculates estimated calories burned based on exercise type and duration.
- * DO NOT add Scanner or System.out here.
- *
- * TODO (Member 6):
- *   1. Decide on a simple formula, e.g.:
- *        calories = duration (minutes) × MET value for that muscle group × weight factor
- *      A simplified version that still shows "logical justification" (required by rubric):
- *        Cardio       → 10 kcal/min
- *        Full Body    → 8  kcal/min
- *        Legs         → 7  kcal/min
- *        Chest/Back   → 6  kcal/min
- *        Arms/Core    → 5  kcal/min
- *   2. Add a static or instance method:
- *        calculateCalories(String muscleGroup, int durationMinutes)
- *   3. Optionally add calculateTotalCalories(ArrayList<Exercise> exercises)
- *      that loops through a full workout plan and sums the result
- */
+ * CalorieCalculator.java — Member 6 */
+
+ import java.util.ArrayList;
+
 public class CalorieCalculator {
 
-    // TODO: Add your calculation method(s) here
-    // public static int calculateCalories(String muscleGroup, int durationMinutes) {
-    //     ...
-    // }
-}
+ public static int calculateCalories(String muscleGroup, int durationMinutes) {
+
+ if (muscleGroup == null || durationMinutes <= 0) {
+            return 0;
+        }
+
+        int calorieRate;
+
+
+ switch (muscleGroup.trim().toLowerCase()) {
+
+            case "cardio":
+                calorieRate = 10;
+                break;
+
+            case "full body":
+                calorieRate = 8;
+                break;
+
+            case "legs":
+                calorieRate = 7;
+                break;
+
+            case "chest":
+            case "back":
+            case "shoulders":
+            case "chest/back":
+                calorieRate = 6;
+                break;
+
+            case "arms":
+            case "biceps":
+            case "triceps":
+            case "core":
+            case "arms/core":
+                calorieRate = 5;
+                break;
+
+            default:
+                calorieRate = 0;
+                break;
+        }
+
+        return durationMinutes * calorieRate;
+    }
+
+    public static int calculateTotalCalories(ArrayList<Exercise> exercises) {
+
+ if (exercises == null) {
+            return 0;
+        }
+
+        int totalCalories = 0;
+
+ for (Exercise exercise : exercises) {
+
+            if (exercise != null) {
+                totalCalories += calculateCalories(
+                        exercise.getMuscleGroup(),
+                        exercise.getDuration()
+                );
+            }
+        }
+
+        return totalCalories;
+    }
+ }
