@@ -29,6 +29,7 @@ public class WorkoutGUI extends JFrame {
     private ArrayList<Exercise> checklistExercises = new ArrayList<>();
     private int plannedDaysPerWeek = 0; // set when the user requests a recommendation; feeds Consistency Score
     private JLabel consistencyLabel;
+    private JTextArea analysisArea;
 
     private JLabel statusBar;
 
@@ -57,10 +58,10 @@ public class WorkoutGUI extends JFrame {
         tabs.setBackground(BG);
 
         tabs.addTab("   Profile   ",  buildProfileTab());
-        tabs.addTab("   My Plan   ",  buildWorkoutPlanTab());
-        tabs.addTab("   Track   ",  buildTrackSessionTab());
-        tabs.addTab("   History   ",  buildHistoryTab());
-        tabs.addTab("   Tips   ",  buildTipsTab());
+        tabs.addTab("   Workout Planner   ",  buildWorkoutPlanTab());
+        tabs.addTab("   Today's Workout   ",  buildTrackSessionTab());
+        tabs.addTab("   Progress   ",  buildHistoryTab());
+        tabs.addTab("   Smart Coach   ",  buildTipsTab());
 
         tabs.addChangeListener(e -> {
             int selected = tabs.getSelectedIndex();
@@ -211,7 +212,7 @@ public class WorkoutGUI extends JFrame {
         panel.setBackground(BG);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        panel.add(sectionTitle("My Workout Plan"), BorderLayout.NORTH);
+        panel.add(sectionTitle("Workout Planner"), BorderLayout.NORTH);
 
         String[] cols = {"Exercise Name", "Muscle Group", "Sets", "Reps", "Duration (min)"};
         planTableModel = new DefaultTableModel(cols, 0) {
@@ -342,7 +343,7 @@ public class WorkoutGUI extends JFrame {
         panel.setBackground(BG);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        panel.add(sectionTitle("Track Today's Session"), BorderLayout.NORTH);
+        panel.add(sectionTitle("Today's Workout"), BorderLayout.NORTH);
 
         checklistPanel = new JPanel();
         checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
@@ -401,13 +402,13 @@ public class WorkoutGUI extends JFrame {
                 return;
             }
 
+            String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
+
             // Recovery Intelligence — check before this session gets added to history
-            String recoveryWarning = workoutLog.getRecoveryWarning(completedMuscleGroups);
+            String recoveryWarning = workoutLog.getRecoveryWarning(today, completedMuscleGroups);
             if (recoveryWarning != null) {
                 JOptionPane.showMessageDialog(this, recoveryWarning, "Recovery Check", JOptionPane.WARNING_MESSAGE);
             }
-
-            String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
             workoutLog.logSession(today, count, totalDuration, calories, completedMuscleGroups);
             refreshHistoryTable();
             JOptionPane.showMessageDialog(this, "Session logged for " + today + ". Great work!", "Session Saved", JOptionPane.INFORMATION_MESSAGE);
@@ -425,7 +426,7 @@ public class WorkoutGUI extends JFrame {
         checklistExercises.clear();
 
         if (workoutPlan.getExercises().isEmpty()) {
-            JLabel emptyLabel = new JLabel("  No exercises in your plan yet — add some in the My Plan tab.");
+            JLabel emptyLabel = new JLabel("  No exercises in your plan yet - add some in the Workout Planner tab.");
             emptyLabel.setFont(new Font(FONT_FAMILY, Font.ITALIC, 13));
             checklistPanel.add(emptyLabel);
         } else {
@@ -448,7 +449,7 @@ public class WorkoutGUI extends JFrame {
         panel.setBackground(BG);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        panel.add(sectionTitle("Workout History"), BorderLayout.NORTH);
+        panel.add(sectionTitle("Your Progress"), BorderLayout.NORTH);
 
         String[] cols = {"Date", "Exercises Completed", "Duration (min)", "Calories Burned"};
         historyTableModel = new DefaultTableModel(cols, 0) {
@@ -457,13 +458,29 @@ public class WorkoutGUI extends JFrame {
         JTable table = new JTable(historyTableModel);
         styleTable(table);
 
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+        // Weekly Progress Analysis panel - sits between the table and the controls
+        analysisArea = new JTextArea(4, 20);
+        analysisArea.setEditable(false);
+        analysisArea.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
+        analysisArea.setLineWrap(true);
+        analysisArea.setWrapStyleWord(true);
+        analysisArea.setBackground(Color.WHITE);
+        analysisArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(
+                        BorderFactory.createLineBorder(BORDER), "This Week's Analysis"),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+
+        JPanel bottomPanel = new JPanel(new BorderLayout(0, 8));
         bottomPanel.setBackground(BG);
+        bottomPanel.add(new JScrollPane(analysisArea), BorderLayout.NORTH);
+
+        JPanel controlsRow = new JPanel(new BorderLayout());
+        controlsRow.setBackground(BG);
 
         consistencyLabel = new JLabel(" ");
         consistencyLabel.setFont(new Font(FONT_FAMILY, Font.BOLD, 13));
         consistencyLabel.setForeground(TEXT_DARK);
-        bottomPanel.add(consistencyLabel, BorderLayout.WEST);
+        controlsRow.add(consistencyLabel, BorderLayout.WEST);
 
         JPanel clearBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         clearBtnPanel.setBackground(BG);
@@ -477,7 +494,8 @@ public class WorkoutGUI extends JFrame {
             }
         });
         clearBtnPanel.add(clearBtn);
-        bottomPanel.add(clearBtnPanel, BorderLayout.EAST);
+        controlsRow.add(clearBtnPanel, BorderLayout.EAST);
+        bottomPanel.add(controlsRow, BorderLayout.SOUTH);
 
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
@@ -499,12 +517,27 @@ public class WorkoutGUI extends JFrame {
     /** Shows Consistency Score + Smart Motivation, or a prompt if no target is set yet. */
     private void refreshConsistencyDisplay() {
         if (plannedDaysPerWeek <= 0) {
-            consistencyLabel.setText("Get a recommendation in My Plan to see your consistency score.");
-            return;
+            consistencyLabel.setText("Get a recommendation in Workout Planner to see your consistency score.");
+        } else {
+            int score = workoutLog.getConsistencyScore(plannedDaysPerWeek);
+            String motivation = workoutLog.getMotivationMessage(plannedDaysPerWeek);
+            consistencyLabel.setText("Consistency: " + score + "% - " + motivation);
         }
-        int score = workoutLog.getConsistencyScore(plannedDaysPerWeek);
-        String motivation = workoutLog.getMotivationMessage(plannedDaysPerWeek);
-        consistencyLabel.setText("Consistency: " + score + "% — " + motivation);
+        refreshWeeklyAnalysis();
+    }
+
+    /** Weekly Progress Analysis - combines session frequency and muscle group
+     *  balance from the last 7 days into plain-language suggestions. */
+    private void refreshWeeklyAnalysis() {
+        String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
+        ArrayList<String> suggestions = workoutLog.getWeeklyAnalysis(today, plannedDaysPerWeek);
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : suggestions) {
+            sb.append("- ").append(s).append("\n");
+        }
+        analysisArea.setText(sb.toString().trim());
+        analysisArea.setCaretPosition(0);
     }
 
     private JPanel buildTipsTab() {
@@ -512,7 +545,7 @@ public class WorkoutGUI extends JFrame {
         panel.setBackground(BG);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        panel.add(sectionTitle("Tips & Goals"), BorderLayout.NORTH);
+        panel.add(sectionTitle("Smart Coach"), BorderLayout.NORTH);
 
         tipsArea = new JTextArea();
         tipsArea.setEditable(false);

@@ -111,7 +111,14 @@ public class User {
     // BMR = calories burned at rest (Mifflin-St Jeor formula)
     public double getBMR() {
         double bmr = (10 * weight) + (6.25 * height) - (5 * age);
-        bmr += gender.equalsIgnoreCase("Male") ? 5 : -161;
+
+        // The Mifflin-St Jeor formula adds 5 for males and subtracts 161 for females
+        if (gender.equalsIgnoreCase("Male")) {
+            bmr = bmr + 5;
+        } else {
+            bmr = bmr - 161;
+        }
+
         return bmr;
     }
 

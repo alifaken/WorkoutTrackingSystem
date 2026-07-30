@@ -49,7 +49,11 @@ public class WorkoutPlan {
 
         for (int i = 0; i < schedule.length; i++) {
             if (i < effectiveDays) {
-                plan.add(schedule[i] + ": " + splitBlocks[i % splitBlocks.length]);
+                // There are only 4 split blocks but the user may train up to 7 days.
+                // The remainder operator (%) wraps the index back to the start of the
+                // array once it passes the end, so the blocks repeat in a cycle.
+                int blockIndex = i % splitBlocks.length;
+                plan.add(schedule[i] + ": " + splitBlocks[blockIndex]);
             } else {
                 plan.add(schedule[i] + ": Rest / Recovery (capped for beginners)");
             }
