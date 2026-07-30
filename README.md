@@ -67,8 +67,8 @@ java -cp ../out Main
 ## Current Status
 - [x] Skeleton code created and compiles successfully
 - [x] GUI shell with 5 tabs (Profile, Plan, Track, History, Tips)
-- [ ] Member classes implemented
-- [ ] GUI wired to real classes (replace TODO sections)
+- [x] Member classes implemented
+- [x] GUI wired to real classes (replace TODO sections)
 - [ ] 15 test cases written and verified
-- [ ] Poster designed
+- [x] Poster designed
 - [ ] Report sections written
