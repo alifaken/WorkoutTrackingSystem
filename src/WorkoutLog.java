@@ -130,13 +130,16 @@ public class WorkoutLog {
     }
 
     // ---------- Consistency Score ----------
-    // plannedSessions is supplied by the caller (e.g. days available from
-    // the user's plan) so this class stays simple and independently testable.
-    public int getConsistencyScore(int plannedSessions) {
+    // Counts only sessions from the last 7 days, so the score reflects THIS
+    // week's consistency rather than everything ever logged.
+    // plannedSessions is supplied by the caller (the user's days-available
+    // setting) so this class stays simple and independently testable.
+    public int getConsistencyScore(String todayDate, int plannedSessions) {
         if (plannedSessions <= 0) {
             return 0;
         }
-        int score = (int) Math.round((sessions.size() * 100.0) / plannedSessions);
+        int completedThisWeek = getSessionsInLastWeek(todayDate).size();
+        int score = (int) Math.round((completedThisWeek * 100.0) / plannedSessions);
         return Math.min(score, 100);
     }
 
@@ -222,11 +225,14 @@ public class WorkoutLog {
 
     // ---------- Smart Motivation ----------
     // Generates a message based on the consistency score band.
-    public String getMotivationMessage(int plannedSessions) {
+    public String getMotivationMessage(String todayDate, int plannedSessions) {
         if (sessions.isEmpty()) {
             return "You haven't logged a session yet. Let's get started!";
         }
-        int score = getConsistencyScore(plannedSessions);
+        if (getSessionsInLastWeek(todayDate).isEmpty()) {
+            return "No sessions logged this week yet. One short workout is enough to restart the habit.";
+        }
+        int score = getConsistencyScore(todayDate, plannedSessions);
         if (score >= 90) {
             return "Excellent! You're right on track with your weekly goal. Keep it up!";
         } else if (score >= 60) {

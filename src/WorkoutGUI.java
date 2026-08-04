@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 
 public class WorkoutGUI extends JFrame {
@@ -225,14 +224,27 @@ public class WorkoutGUI extends JFrame {
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
         inputPanel.setBackground(BG);
 
-        JTextField exNameField    = placeholderField("Exercise name", 12);
+        // Muscle group is chosen first, since it drives the exercise suggestions
         JComboBox<String> muscleCombo = new JComboBox<>(new String[]{
                 "Chest", "Back", "Shoulders", "Biceps", "Triceps",
                 "Legs", "Core", "Cardio", "Full Body"
         });
-        JTextField setsField      = placeholderField("Sets", 4);
-        JTextField repsField      = placeholderField("Reps", 4);
-        JTextField durationField  = placeholderField("Min", 4);
+
+        // Editable combo box: users can pick a common exercise from the list,
+        // or type their own if it is not there.
+        JComboBox<String> exerciseCombo = new JComboBox<>();
+        exerciseCombo.setEditable(true);
+        exerciseCombo.setFont(new Font(FONT_FAMILY, Font.PLAIN, 13));
+        exerciseCombo.setToolTipText("Pick a common exercise, or type your own");
+        updateExerciseSuggestions(exerciseCombo, (String) muscleCombo.getSelectedItem());
+
+        // Refresh the suggestions whenever a different muscle group is chosen
+        muscleCombo.addActionListener(e ->
+                updateExerciseSuggestions(exerciseCombo, (String) muscleCombo.getSelectedItem()));
+
+        JTextField setsField      = placeholderField("How many sets, e.g. 3", 4);
+        JTextField repsField      = placeholderField("Repetitions per set, e.g. 10", 4);
+        JTextField durationField  = placeholderField("Total minutes for this exercise, e.g. 5", 4);
 
         JButton addBtn    = styledButton("+ Add", ACCENT);
         JButton removeBtn = styledButton("Remove", DANGER);
@@ -241,11 +253,11 @@ public class WorkoutGUI extends JFrame {
         errLabel.setForeground(DANGER);
         errLabel.setFont(new Font(FONT_FAMILY, Font.ITALIC, 12));
 
-        inputPanel.add(new JLabel("Exercise:")); inputPanel.add(exNameField);
         inputPanel.add(new JLabel("Muscle:"));   inputPanel.add(muscleCombo);
+        inputPanel.add(new JLabel("Exercise:")); inputPanel.add(exerciseCombo);
         inputPanel.add(new JLabel("Sets:"));     inputPanel.add(setsField);
         inputPanel.add(new JLabel("Reps:"));     inputPanel.add(repsField);
-        inputPanel.add(new JLabel("Duration:")); inputPanel.add(durationField);
+        inputPanel.add(new JLabel("Duration (min):")); inputPanel.add(durationField);
         inputPanel.add(addBtn);
         inputPanel.add(removeBtn);
         inputPanel.add(recommendBtn);
@@ -254,7 +266,8 @@ public class WorkoutGUI extends JFrame {
         panel.add(inputPanel, BorderLayout.SOUTH);
 
         addBtn.addActionListener(e -> {
-            String exName  = exNameField.getText().trim();
+            Object typed   = exerciseCombo.getEditor().getItem();
+            String exName  = (typed == null) ? "" : typed.toString().trim();
             String muscle  = (String) muscleCombo.getSelectedItem();
             String setsStr = setsField.getText().trim();
             String repsStr = repsField.getText().trim();
@@ -278,7 +291,9 @@ public class WorkoutGUI extends JFrame {
                 workoutPlan.addExercise(ex);
                 planTableModel.addRow(new Object[]{exName, muscle, sets, reps, duration});
 
-                exNameField.setText(""); setsField.setText("");
+                exerciseCombo.setSelectedItem("");
+                exerciseCombo.getEditor().setItem("");
+                setsField.setText("");
                 repsField.setText(""); durationField.setText("");
                 errLabel.setText(" ");
                 updateStatus("Exercise added: " + exName);
@@ -336,6 +351,55 @@ public class WorkoutGUI extends JFrame {
         });
 
         return panel;
+    }
+
+    /** Fills the exercise dropdown with common exercises for the chosen muscle
+     *  group. The box stays editable, so a user can still type anything they
+     *  want if their exercise is not in the list. */
+    private void updateExerciseSuggestions(JComboBox<String> exerciseCombo, String muscleGroup) {
+        String[] suggestions;
+
+        switch (muscleGroup) {
+            case "Chest":
+                suggestions = new String[]{"Push Up", "Bench Press", "Incline Dumbbell Press", "Chest Fly", "Dips"};
+                break;
+            case "Back":
+                suggestions = new String[]{"Pull Up", "Lat Pulldown", "Seated Row", "Bent Over Row", "Deadlift"};
+                break;
+            case "Shoulders":
+                suggestions = new String[]{"Shoulder Press", "Lateral Raise", "Front Raise", "Face Pull", "Shrugs"};
+                break;
+            case "Biceps":
+                suggestions = new String[]{"Bicep Curl", "Hammer Curl", "Preacher Curl", "Chin Up", "Cable Curl"};
+                break;
+            case "Triceps":
+                suggestions = new String[]{"Tricep Pushdown", "Overhead Extension", "Close Grip Bench Press", "Tricep Dip", "Skull Crusher"};
+                break;
+            case "Legs":
+                suggestions = new String[]{"Squat", "Lunge", "Leg Press", "Leg Curl", "Calf Raise"};
+                break;
+            case "Core":
+                suggestions = new String[]{"Plank", "Sit Up", "Russian Twist", "Leg Raise", "Mountain Climber"};
+                break;
+            case "Cardio":
+                suggestions = new String[]{"Treadmill Run", "Cycling", "Jump Rope", "Rowing Machine", "Stair Climber"};
+                break;
+            case "Full Body":
+                suggestions = new String[]{"Burpee", "Kettlebell Swing", "Clean and Press", "Thruster", "Bear Crawl"};
+                break;
+            default:
+                suggestions = new String[]{};
+                break;
+        }
+
+        exerciseCombo.removeAllItems();
+        for (String s : suggestions) {
+            exerciseCombo.addItem(s);
+        }
+        // Start blank so the user actively chooses or types, rather than
+        // accidentally adding whichever exercise happened to be first
+        exerciseCombo.setSelectedItem("");
+        exerciseCombo.getEditor().setItem("");
     }
 
     private JPanel buildTrackSessionTab() {
@@ -484,6 +548,23 @@ public class WorkoutGUI extends JFrame {
 
         JPanel clearBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         clearBtnPanel.setBackground(BG);
+
+        // Demonstration aid: seeds a week of sessions so the weekly features
+        // can be shown without waiting seven days. Clearly labelled as sample data.
+        JButton sampleBtn = styledButton("Load Sample Week", ACCENT);
+        sampleBtn.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "This will add sample workout sessions from the past week for demonstration purposes.\n"
+                            + "Any existing history will be replaced. Continue?",
+                    "Load Sample Data", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                loadSampleWeek();
+                refreshHistoryTable();
+                updateStatus("Sample week loaded for demonstration.");
+            }
+        });
+        clearBtnPanel.add(sampleBtn);
+
         JButton clearBtn = styledButton("Clear History", DANGER);
         clearBtn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this, "Clear all workout history?", "Confirm", JOptionPane.YES_NO_OPTION);
@@ -516,11 +597,12 @@ public class WorkoutGUI extends JFrame {
 
     /** Shows Consistency Score + Smart Motivation, or a prompt if no target is set yet. */
     private void refreshConsistencyDisplay() {
+        String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
         if (plannedDaysPerWeek <= 0) {
             consistencyLabel.setText("Get a recommendation in Workout Planner to see your consistency score.");
         } else {
-            int score = workoutLog.getConsistencyScore(plannedDaysPerWeek);
-            String motivation = workoutLog.getMotivationMessage(plannedDaysPerWeek);
+            int score = workoutLog.getConsistencyScore(today, plannedDaysPerWeek);
+            String motivation = workoutLog.getMotivationMessage(today, plannedDaysPerWeek);
             consistencyLabel.setText("Consistency: " + score + "% - " + motivation);
         }
         refreshWeeklyAnalysis();
@@ -538,6 +620,43 @@ public class WorkoutGUI extends JFrame {
         }
         analysisArea.setText(sb.toString().trim());
         analysisArea.setCaretPosition(0);
+    }
+
+    /** Loads a week of sample sessions so the weekly features can be
+     *  demonstrated without waiting seven days. Dates are calculated
+     *  relative to today, so the data always falls inside the 7-day window. */
+    private void loadSampleWeek() {
+        workoutLog.clearHistory();
+
+        // Each entry: how many days ago, exercises, duration, muscle groups.
+        // Chest appears three times on purpose, so the muscle-balance check
+        // has something to flag and the feature is visible in a demo.
+        addSampleSession(6, 3, 45, "Chest", "Triceps");
+        addSampleSession(5, 4, 50, "Back", "Biceps");
+        addSampleSession(4, 3, 40, "Chest", "Shoulders");
+        addSampleSession(2, 4, 50, "Core");
+        addSampleSession(1, 3, 45, "Chest", "Triceps");
+
+        // A target is needed for the consistency score to mean anything
+        if (plannedDaysPerWeek <= 0) {
+            plannedDaysPerWeek = 4;
+        }
+    }
+
+    /** Builds one sample session dated a given number of days before today. */
+    private void addSampleSession(int daysAgo, int exerciseCount, int duration, String... muscleGroups) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, -daysAgo);
+        String date = new java.text.SimpleDateFormat("dd/MM/yyyy").format(calendar.getTime());
+
+        ArrayList<String> groups = new ArrayList<>();
+        int calories = 0;
+        for (String group : muscleGroups) {
+            groups.add(group);
+            calories += CalorieCalculator.calculateCalories(group, duration / muscleGroups.length);
+        }
+
+        workoutLog.logSession(date, exerciseCount, duration, calories, groups);
     }
 
     private JPanel buildTipsTab() {

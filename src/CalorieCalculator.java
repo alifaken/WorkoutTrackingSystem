@@ -1,20 +1,20 @@
 /**
  * CalorieCalculator.java — Member 6 */
 
- import java.util.ArrayList;
+import java.util.ArrayList;
 
 public class CalorieCalculator {
 
- public static int calculateCalories(String muscleGroup, int durationMinutes) {
+    public static int calculateCalories(String muscleGroup, int durationMinutes) {
 
- if (muscleGroup == null || durationMinutes <= 0) {
+        if (muscleGroup == null || durationMinutes <= 0) {
             return 0;
         }
 
         int calorieRate;
 
 
- switch (muscleGroup.trim().toLowerCase()) {
+        switch (muscleGroup.trim().toLowerCase()) {
 
             case "cardio":
                 calorieRate = 10;
@@ -31,15 +31,12 @@ public class CalorieCalculator {
             case "chest":
             case "back":
             case "shoulders":
-            case "chest/back":
                 calorieRate = 6;
                 break;
 
-            case "arms":
             case "biceps":
             case "triceps":
             case "core":
-            case "arms/core":
                 calorieRate = 5;
                 break;
 
@@ -53,13 +50,13 @@ public class CalorieCalculator {
 
     public static int calculateTotalCalories(ArrayList<Exercise> exercises) {
 
- if (exercises == null) {
+        if (exercises == null) {
             return 0;
         }
 
         int totalCalories = 0;
 
- for (Exercise exercise : exercises) {
+        for (Exercise exercise : exercises) {
 
             if (exercise != null) {
                 totalCalories += calculateCalories(
@@ -71,4 +68,4 @@ public class CalorieCalculator {
 
         return totalCalories;
     }
- }
+}
